@@ -1,0 +1,319 @@
+/* ============================================
+   SkillPassport Design System Tokens
+   Premium SaaS — Inspired by Linear/Stripe/Vercel
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  /* ─── Core Surfaces ─── */
+  --sp-bg: #09090B;
+  --sp-surface: #131315;
+  --sp-surface-card: #111113;
+  --sp-surface-elevated: #18181B;
+  --sp-surface-container-low: #1C1B1D;
+  --sp-surface-container: #201F22;
+  --sp-surface-container-high: #2A2A2C;
+  --sp-surface-container-highest: #353437;
+
+  /* ─── Borders ─── */
+  --sp-border: #262626;
+  --sp-border-hover: #3F3F46;
+  --sp-border-active: #4F46E5;
+
+  /* ─── Text ─── */
+  --sp-text-primary: #FFFFFF;
+  --sp-text-secondary: #A1A1AA;
+  --sp-text-tertiary: #71717A;
+  --sp-text-on-surface: #E5E1E4;
+  --sp-text-on-surface-variant: #C7C4D8;
+
+  /* ─── Accent (Deep Indigo) ─── */
+  --sp-accent: #4F46E5;
+  --sp-accent-hover: #4338CA;
+  --sp-accent-light: #C3C0FF;
+  --sp-accent-muted: rgba(79, 70, 229, 0.15);
+  --sp-accent-glow: rgba(79, 70, 229, 0.12);
+
+  /* ─── Functional Colors ─── */
+  --sp-success: #22C55E;
+  --sp-success-muted: rgba(34, 197, 94, 0.15);
+  --sp-warning: #F59E0B;
+  --sp-warning-muted: rgba(245, 158, 11, 0.15);
+  --sp-error: #EF4444;
+  --sp-error-muted: rgba(239, 68, 68, 0.15);
+  --sp-info: #3B82F6;
+
+  /* ─── Typography ─── */
+  --sp-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --sp-font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+
+  /* ─── Spacing ─── */
+  --sp-space-xs: 4px;
+  --sp-space-sm: 8px;
+  --sp-space-md: 16px;
+  --sp-space-lg: 24px;
+  --sp-space-xl: 32px;
+  --sp-space-2xl: 48px;
+  --sp-space-3xl: 64px;
+  --sp-space-4xl: 80px;
+
+  /* ─── Border Radius ─── */
+  --sp-radius-sm: 6px;
+  --sp-radius-md: 8px;
+  --sp-radius-lg: 12px;
+  --sp-radius-xl: 16px;
+  --sp-radius-full: 9999px;
+
+  /* ─── Shadows ─── */
+  --sp-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --sp-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --sp-shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.5);
+  --sp-shadow-glow: 0 0 15px var(--sp-accent-glow);
+
+  /* ─── Transitions ─── */
+  --sp-transition-fast: 150ms ease;
+  --sp-transition: 200ms ease;
+  --sp-transition-slow: 300ms ease;
+
+  /* ─── Layout ─── */
+  --sp-sidebar-width: 280px;
+  --sp-header-height: 64px;
+  --sp-max-width: 1280px;
+}
+
+/* ============================================
+   Reset & Base
+   ============================================ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: var(--sp-font);
+  background-color: var(--sp-bg);
+  color: var(--sp-text-on-surface);
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+::selection {
+  background-color: var(--sp-accent);
+  color: white;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+input, textarea, select {
+  font-family: inherit;
+}
+
+/* ============================================
+   Typography
+   ============================================ */
+.sp-hero {
+  font-size: 64px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--sp-text-primary);
+}
+
+.sp-hero-mobile {
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--sp-text-primary);
+}
+
+.sp-h1 {
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--sp-text-primary);
+}
+
+.sp-h2 {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.33;
+  letter-spacing: -0.01em;
+  color: var(--sp-text-primary);
+}
+
+.sp-h3 {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.56;
+  color: var(--sp-text-primary);
+}
+
+.sp-subheading {
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.56;
+  color: var(--sp-text-secondary);
+}
+
+.sp-body {
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--sp-text-on-surface);
+}
+
+.sp-body-sm {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.43;
+  color: var(--sp-text-secondary);
+}
+
+.sp-label {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.33;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--sp-text-secondary);
+}
+
+.sp-mono {
+  font-family: var(--sp-font-mono);
+  font-size: 13px;
+}
+
+/* ============================================
+   Utility Classes
+   ============================================ */
+.sp-card {
+  background: var(--sp-surface-card);
+  border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius-lg);
+  transition: border-color var(--sp-transition), box-shadow var(--sp-transition);
+}
+
+.sp-card:hover {
+  border-color: var(--sp-border-hover);
+}
+
+.sp-card-glow:hover {
+  border-color: var(--sp-accent);
+  box-shadow: var(--sp-shadow-glow);
+}
+
+.sp-container {
+  max-width: var(--sp-max-width);
+  margin: 0 auto;
+  padding: 0 var(--sp-space-2xl);
+}
+
+.sp-section {
+  padding: var(--sp-space-4xl) 0;
+}
+
+.sp-gradient-text {
+  background: linear-gradient(135deg, var(--sp-text-primary) 0%, var(--sp-accent-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ============================================
+   Scrollbar
+   ============================================ */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--sp-border);
+  border-radius: var(--sp-radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--sp-border-hover);
+}
+
+/* ============================================
+   Animations
+   ============================================ */
+@keyframes sp-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes sp-slide-in-right {
+  from { opacity: 0; transform: translateX(16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes sp-pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 var(--sp-accent-muted); }
+  50% { box-shadow: 0 0 20px 4px var(--sp-accent-muted); }
+}
+
+@keyframes sp-count-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.sp-animate-in {
+  animation: sp-fade-in 0.4s ease-out forwards;
+}
+
+/* ============================================
+   Responsive
+   ============================================ */
+@media (max-width: 768px) {
+  :root {
+    --sp-sidebar-width: 0px;
+  }
+  
+  .sp-hero {
+    font-size: 40px;
+  }
+  
+  .sp-h1 {
+    font-size: 28px;
+  }
+  
+  .sp-container {
+    padding: 0 var(--sp-space-md);
+  }
+}

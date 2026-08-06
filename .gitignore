@@ -1,0 +1,80 @@
+# ==========================================
+# Node.js & Web Build Dependencies
+# ==========================================
+node_modules/
+.pnpm-store/
+dist/
+dist-ssr/
+build/
+.output/
+
+# ==========================================
+# Java Spring Boot Services
+# ==========================================
+**/target/
+*.class
+*.jar
+*.war
+*.ear
+.mvn/
+mvnw
+mvnw.cmd
+
+# ==========================================
+# Python AI Services
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+.pytest_cache/
+
+# ==========================================
+# Environment Variables & Secrets
+# ==========================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+*.local
+
+# ==========================================
+# Logs & System Files
+# ==========================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ==========================================
+# Editor & OS Files
+# ==========================================
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+
+# ==========================================
+# Build & Monorepo Caches
+# ==========================================
+.turbo/
+*.tsbuildinfo
+.tmp/
+.cache/
