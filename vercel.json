@@ -1,27 +1,5 @@
 {
-  "services": {
-    "frontend": {
-      "root": ".",
-      "framework": "vite"
-    },
-    "ai-service": {
-      "root": "services/ai-service"
-    }
-  },
   "rewrites": [
-    {
-      "source": "/api(/.*)?",
-      "destination": {
-        "type": "service",
-        "service": "ai-service"
-      }
-    },
-    {
-      "source": "/(.*)",
-      "destination": {
-        "type": "service",
-        "service": "frontend"
-      }
-    }
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
