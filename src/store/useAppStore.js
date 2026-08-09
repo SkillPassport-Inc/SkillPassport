@@ -18,6 +18,71 @@ const languageColorMap = {
   Ruby: '#701516',
 };
 
+const createDefaultTrialSubscription = () => {
+  const now = new Date();
+  const trialEndsAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
+  return {
+    plan: 'Developer Pro',
+    status: 'trialing',
+    createdAt: now.toISOString(),
+    trialEndsAt: trialEndsAt,
+    paymentId: null,
+    amount: 0,
+  };
+};
+
+export const getSubscriptionDetails = (user) => {
+  const sub = user?.subscription;
+  if (!sub) return { plan: 'Free', status: 'active', badgeText: 'Free Tier', daysRemaining: 0, isExpired: true };
+
+  if (sub.paymentId) {
+    return {
+      plan: sub.plan || 'Developer Pro',
+      status: 'active',
+      badgeText: `✓ Paid Active (${sub.plan})`,
+      isPaid: true,
+      daysRemaining: null,
+      isExpired: false,
+    };
+  }
+
+  if (sub.trialEndsAt) {
+    const now = new Date();
+    const endDate = new Date(sub.trialEndsAt);
+    const diffTime = endDate.getTime() - now.getTime();
+    const daysRemaining = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+
+    if (daysRemaining <= 0 || now > endDate) {
+      return {
+        plan: 'Free',
+        status: 'expired',
+        badgeText: '⚠️ 7-Day Free Pro Trial Expired (Free Tier)',
+        isPaid: false,
+        daysRemaining: 0,
+        isExpired: true,
+      };
+    }
+
+    return {
+      plan: 'Developer Pro',
+      status: 'trialing',
+      badgeText: `🎁 7-Day Free Developer Pro Trial (${daysRemaining} ${daysRemaining === 1 ? 'day' : 'days'} remaining)`,
+      isPaid: false,
+      daysRemaining,
+      isExpired: false,
+    };
+  }
+
+  return {
+    plan: sub.plan || 'Free',
+    status: sub.status || 'active',
+    badgeText: 'Free Tier',
+    isPaid: false,
+    daysRemaining: 0,
+    isExpired: false,
+  };
+};
+
 const initialUserState = {
   name: '',
   title: '',
@@ -35,12 +100,7 @@ const initialUserState = {
   role: 'developer',
   isAuthenticated: false,
   isProfileSetup: false,
-  subscription: {
-    plan: 'Free',
-    status: 'active',
-    paymentId: null,
-    amount: 0,
-  },
+  subscription: createDefaultTrialSubscription(),
   overallScore: 0,
   stats: {
     projects: 0,
@@ -120,6 +180,87 @@ const saveAccountToDB = (user, skills = [], repositories = [], certifications = 
     localStorage.setItem('skillpassport_db_accounts', JSON.stringify(accounts));
   } catch (e) {
     console.error('Error persisting account to DB:', e);
+  }
+};
+
+export const getRegisteredCandidatesDB = () => {
+  const defaultCandidates = [
+    {
+      id: 'cand-1',
+      name: 'Alex Chen',
+      email: 'alex.chen@developer.com',
+      title: 'Senior Frontend Architect',
+      match: 98,
+      overallScore: 95,
+      role: 'developer',
+      skills: [
+        { name: 'React', level: 95, score: 95 },
+        { name: 'JavaScript', level: 90, score: 90 },
+        { name: 'Node.js', level: 85, score: 85 },
+      ],
+      repositories: [
+        { name: 'react-design-system', desc: 'Enterprise component library with 100% test coverage', overall: 96 },
+        { name: 'web-performance-suite', desc: 'Vite & Webpack bundle analyzer tool', overall: 92 },
+      ],
+      certifications: [{ name: 'AWS Certified Developer', issuer: 'Amazon Web Services' }],
+      bio: 'Experienced frontend architect specializing in high-performance React applications. Verified history of scaling complex SPAs.',
+    },
+    {
+      id: 'cand-2',
+      name: 'Sarah Jenkins',
+      email: 'sarah.j@developer.com',
+      title: 'Full Stack Engineer',
+      match: 92,
+      overallScore: 91,
+      role: 'developer',
+      skills: [
+        { name: 'React', level: 88, score: 88 },
+        { name: 'Python', level: 90, score: 90 },
+        { name: 'PostgreSQL', level: 85, score: 85 },
+      ],
+      repositories: [{ name: 'ai-analytics-engine', desc: 'FastAPI + PyTorch ML pipeline', overall: 90 }],
+      certifications: [{ name: 'Full Stack Web Development', issuer: 'Meta' }],
+      bio: 'Strong background in modern web stacks and ML data pipelines. Verified open-source contributions.',
+    },
+  ];
+
+  try {
+    const raw = localStorage.getItem('skillpassport_db_accounts');
+    if (!raw) return defaultCandidates;
+    const accounts = JSON.parse(raw);
+
+    const dbCandidates = [];
+    Object.values(accounts).forEach((acc, idx) => {
+      if (acc.user && acc.user.role === 'developer' && acc.user.name) {
+        dbCandidates.push({
+          id: acc.user.id || `cand-db-${idx}`,
+          name: acc.user.name,
+          email: acc.user.email,
+          title: acc.user.title || 'Software Engineer',
+          match: acc.user.overallScore || 94,
+          overallScore: acc.user.overallScore || 94,
+          role: acc.user.role,
+          skills: acc.skills && acc.skills.length > 0 ? acc.skills : [{ name: 'JavaScript', level: 88 }, { name: 'React', level: 85 }],
+          repositories: acc.repositories || [],
+          certifications: acc.certifications || [],
+          bio: acc.user.bio || 'Verified software developer with recorded codebase analysis history.',
+        });
+      }
+    });
+
+    // Avoid duplicate names if present
+    const unique = [];
+    const names = new Set();
+    [...dbCandidates, ...defaultCandidates].forEach((c) => {
+      if (!names.has(c.name.toLowerCase())) {
+        names.add(c.name.toLowerCase());
+        unique.push(c);
+      }
+    });
+
+    return unique;
+  } catch (e) {
+    return defaultCandidates;
   }
 };
 
@@ -336,6 +477,7 @@ export const useAppStore = create(
           set({ user: newUser });
           saveAccountToDB(newUser, get().skills, get().repositories, get().certifications, get().activities);
         }
+        get().recordTodayActivity(1);
       },
 
       register: (data) => {
@@ -360,6 +502,7 @@ export const useAppStore = create(
           set({ user: newUser });
           saveAccountToDB(newUser, get().skills, get().repositories, get().certifications, get().activities);
         }
+        get().recordTodayActivity(1);
       },
 
       logout: () => {

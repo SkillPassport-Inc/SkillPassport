@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../store/useAppStore.js';
@@ -7,6 +7,7 @@ import Card from '../components/Card.jsx';
 import SyncPlatformModal from '../components/SyncPlatformModal.jsx';
 import AddSkillModal from '../components/AddSkillModal.jsx';
 import Button from '../components/Button.jsx';
+import DashboardSkeleton from '../components/DashboardSkeleton.jsx';
 
 const skillGrowthData = [
   { month: 'Jan', score: 50 },
@@ -30,9 +31,22 @@ export default function Dashboard() {
   const activities = useAppStore((state) => state.activities);
   const repositories = useAppStore((state) => state.repositories);
   const certifications = useAppStore((state) => state.certifications);
+  const isSyncingGitHub = useAppStore((state) => state.isSyncingGitHub);
 
   const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
   const [isAddSkillOpen, setIsAddSkillOpen] = useState(false);
+  const [isPageLoading, setIsPageLoading] = useState(!user.email);
+
+  useEffect(() => {
+    if (user.email) {
+      const timer = setTimeout(() => setIsPageLoading(false), 200);
+      return () => clearTimeout(timer);
+    }
+  }, [user.email]);
+
+  if (isPageLoading || isSyncingGitHub) {
+    return <DashboardSkeleton />;
+  }
 
   const topSkills = skills.slice(0, 5);
 

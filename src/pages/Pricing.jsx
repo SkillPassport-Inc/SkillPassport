@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import Button from '../components/Button.jsx';
 import { useNavigate } from 'react-router-dom';
-import { useAppStore } from '../store/useAppStore.js';
+import { useAppStore, getSubscriptionDetails } from '../store/useAppStore.js';
 import { openRazorpayCheckout } from '../utils/razorpay.js';
 
 const tiers = [
@@ -21,7 +21,7 @@ const tiers = [
     amount: 1299,
     price: '₹1,299',
     period: '/month',
-    desc: 'Unlock the full power of AI.',
+    desc: 'Unlock full AI suite (7-Day Free Trial on signup).',
     features: ['AI Resume Builder', 'AI Career Coach', 'ATS optimization', 'Unlimited repo analysis'],
     cta: 'Pay with Razorpay 💳',
     highlight: true,
@@ -53,6 +53,8 @@ export default function Pricing() {
   const user = useAppStore((state) => state.user);
   const subscribePlan = useAppStore((state) => state.subscribePlan);
   const [loadingTier, setLoadingTier] = useState(null);
+
+  const subDetails = getSubscriptionDetails(user);
 
   const handleSubscribe = async (tier) => {
     if (tier.amount === 0) {
@@ -105,22 +107,29 @@ export default function Pricing() {
         </div>
       </header>
 
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '80px 48px' }}>
-        <div style={{ textAlign: 'center', marginBottom: '64px' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '60px 48px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '48px' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'var(--sp-accent-muted)', border: '1px solid rgba(79,70,229,0.3)', padding: '6px 16px', borderRadius: 'var(--sp-radius-full)', fontSize: '13px', color: 'var(--sp-accent-light)', fontWeight: 600, marginBottom: '16px' }}>
             💳 Powered by Razorpay Payment Gateway
           </div>
           <h1 style={{ fontSize: '48px', fontWeight: 700, letterSpacing: '-0.03em', color: 'var(--sp-text-primary)', marginBottom: '12px' }}>
             Simple, transparent pricing
           </h1>
-          <p style={{ fontSize: '18px', color: 'var(--sp-text-secondary)' }}>
-            Start free. Upgrade via Razorpay with UPI, Credit/Debit Cards, or Net Banking in Indian Rupees (₹).
+          <p style={{ fontSize: '18px', color: 'var(--sp-text-secondary)', marginBottom: '20px' }}>
+            Every new developer account includes a <strong>7-Day Free Developer Pro Trial</strong>.
           </p>
+
+          {/* Active Subscription / Trial Status Banner */}
+          {user?.email && (
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{ display: 'inline-block', background: subDetails.isExpired ? 'var(--sp-warning-muted)' : 'rgba(79,70,229,0.15)', border: `1px solid ${subDetails.isExpired ? 'var(--sp-warning)' : 'var(--sp-accent)'}`, padding: '10px 24px', borderRadius: 'var(--sp-radius-md)', color: 'var(--sp-text-primary)', fontSize: '14px', fontWeight: 600 }}>
+              {subDetails.badgeText}
+            </motion.div>
+          )}
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
           {tiers.map((tier) => {
-            const isCurrent = user.subscription?.plan === tier.name;
+            const isCurrent = subDetails.plan === tier.name || (tier.name === 'Developer Pro' && subDetails.isTrial);
             return (
               <div
                 key={tier.name}
@@ -135,7 +144,9 @@ export default function Pricing() {
                 }}
               >
                 {tier.highlight && (
-                  <span style={{ position: 'absolute', top: '-12px', left: '50%', transform: 'translateX(-50%)', background: 'var(--sp-accent)', color: 'white', fontSize: '11px', fontWeight: 700, padding: '4px 12px', borderRadius: 'var(--sp-radius-full)', textTransform: 'uppercase' }}>Most Popular</span>
+                  <span style={{ position: 'absolute', top: '-12px', left: '50%', transform: 'translateX(-50%)', background: 'var(--sp-accent)', color: 'white', fontSize: '11px', fontWeight: 700, padding: '4px 12px', borderRadius: 'var(--sp-radius-full)', textTransform: 'uppercase' }}>
+                    {subDetails.isTrial ? '7-Day Free Trial' : 'Most Popular'}
+                  </span>
                 )}
                 <h3 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--sp-text-primary)', marginBottom: '4px' }}>{tier.name}</h3>
                 <p style={{ fontSize: '13px', color: 'var(--sp-text-tertiary)', marginBottom: '16px' }}>{tier.desc}</p>
@@ -158,7 +169,7 @@ export default function Pricing() {
                   loading={loadingTier === tier.name}
                   onClick={() => handleSubscribe(tier)}
                 >
-                  {isCurrent ? 'Current Active Plan' : tier.cta}
+                  {isCurrent && subDetails.isPaid ? 'Current Active Plan' : (isCurrent && subDetails.isTrial ? `Upgrade Plan (${subDetails.daysRemaining} Days Trial Left)` : tier.cta)}
                 </Button>
               </div>
             );

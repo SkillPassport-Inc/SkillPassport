@@ -3,38 +3,49 @@ import { motion } from 'framer-motion';
 import Card from '../components/Card.jsx';
 import Button from '../components/Button.jsx';
 import Badge from '../components/Badge.jsx';
-
-const candidates = [
-  {
-    name: 'Alex Chen', title: 'Senior Frontend', match: 98, verified: true,
-    skills: [{ name: 'React', level: 95 }, { name: 'JavaScript', level: 90 }, { name: 'Node.js', level: 60 }],
-    bio: 'Experienced frontend architect specializing in high-performance React applications. Verified history of scaling complex SPAs.',
-  },
-  {
-    name: 'Sarah Jenkins', title: 'Full Stack Eng', match: 92, verified: true,
-    skills: [{ name: 'React', level: 85 }, { name: 'JavaScript', level: 85 }, { name: 'GraphQL', level: 75 }],
-    bio: 'Strong background in modern web stacks. Recently verified open-source contributions in popular JavaScript repositories.',
-  },
-  {
-    name: 'Marcus Wright', title: 'Backend Engineer', match: 87, verified: true,
-    skills: [{ name: 'Java', level: 92 }, { name: 'Spring Boot', level: 88 }, { name: 'Kafka', level: 78 }],
-    bio: 'Distributed systems specialist with deep expertise in Java microservices. 5+ years of enterprise experience.',
-  },
-  {
-    name: 'Aisha Patel', title: 'Platform Engineer', match: 84, verified: false,
-    skills: [{ name: 'Kubernetes', level: 90 }, { name: 'Docker', level: 92 }, { name: 'Terraform', level: 85 }],
-    bio: 'Infrastructure expert focused on Kubernetes and cloud-native architectures. AWS certified solutions architect.',
-  },
-];
+import CandidateProfileModal from '../components/CandidateProfileModal.jsx';
+import { getRegisteredCandidatesDB } from '../store/useAppStore.js';
 
 export default function RecruiterSearch() {
-  const [searchQuery, setSearchQuery] = useState('React + JavaScript + 5+ Years');
+  const candidates = getRegisteredCandidatesDB();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCandidate, setSelectedCandidate] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [pipelineNotified, setPipelineNotified] = useState(false);
+
+  const filteredCandidates = candidates.filter((c) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      c.name.toLowerCase().includes(q) ||
+      c.title.toLowerCase().includes(q) ||
+      c.bio.toLowerCase().includes(q) ||
+      c.skills.some((s) => (s.name || s).toLowerCase().includes(q))
+    );
+  });
+
+  const handleOpenProfile = (candidate) => {
+    setSelectedCandidate(candidate);
+    setIsModalOpen(true);
+  };
+
+  const handleAddToPipeline = (candidate) => {
+    setPipelineNotified(true);
+    setTimeout(() => setPipelineNotified(false), 3000);
+  };
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      <div>
-        <h1 style={{ fontSize: '36px', fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--sp-text-primary)', marginBottom: '4px' }}>Candidate Search</h1>
-        <p style={{ fontSize: '16px', color: 'var(--sp-text-secondary)' }}>Discover and verify top engineering talent instantly.</p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '16px' }}>
+        <div>
+          <h1 style={{ fontSize: '36px', fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--sp-text-primary)', marginBottom: '4px' }}>Candidate Search & Verification</h1>
+          <p style={{ fontSize: '16px', color: 'var(--sp-text-secondary)' }}>Discover and verify real database candidates and technical talent instantly.</p>
+        </div>
+        {pipelineNotified && (
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{ background: 'var(--sp-success-muted)', border: '1px solid var(--sp-success)', color: 'var(--sp-success)', padding: '8px 16px', borderRadius: 'var(--sp-radius-md)', fontSize: '13px', fontWeight: 600 }}>
+            ✓ Candidate added to active recruiter hiring pipeline!
+          </motion.div>
+        )}
       </div>
 
       <div style={{ position: 'relative', maxWidth: '800px' }}>
@@ -44,60 +55,59 @@ export default function RecruiterSearch() {
         <input
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search candidates by name, title, or skills (e.g. React, Java, Python)..."
           style={{ width: '100%', background: 'var(--sp-surface-card)', border: '1px solid var(--sp-border)', borderRadius: 'var(--sp-radius-md)', padding: '14px 120px 14px 44px', color: 'var(--sp-text-on-surface)', fontSize: '15px', fontFamily: 'var(--sp-font)', outline: 'none' }}
         />
         <button style={{ position: 'absolute', right: '4px', top: '4px', bottom: '4px', background: 'var(--sp-accent)', color: 'white', border: 'none', borderRadius: 'var(--sp-radius-md)', padding: '0 20px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'var(--sp-font)' }}>
-          ✨ AI Search
+          ✨ AI Filter
         </button>
       </div>
 
-      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-        {['React', 'JavaScript', 'Experience: 5+ Years'].map((f) => (
-          <span key={f} style={{ background: 'var(--sp-surface-container-high)', border: '1px solid var(--sp-border)', borderRadius: 'var(--sp-radius-full)', padding: '4px 12px', fontSize: '12px', fontWeight: 500, color: 'var(--sp-text-secondary)', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-            {f} <span style={{ opacity: 0.5 }}>×</span>
-          </span>
-        ))}
-      </div>
-
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--sp-border)', paddingBottom: '8px' }}>
-        <h2 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--sp-text-primary)' }}>AI Matches ({candidates.length})</h2>
+        <h2 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--sp-text-primary)' }}>Verified Database Candidates ({filteredCandidates.length})</h2>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
-        {candidates.map((c) => (
-          <div key={c.name}>
+        {filteredCandidates.map((c) => (
+          <div key={c.id || c.name} onClick={() => handleOpenProfile(c)} style={{ cursor: 'pointer' }}>
             <Card padding="24px" glow>
               <div style={{ display: 'flex', gap: '20px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', minWidth: '100px', borderRight: '1px solid var(--sp-border)', paddingRight: '20px' }}>
                   <div style={{ position: 'relative' }}>
-                    <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--sp-surface-container-high)', border: '1px solid var(--sp-border-hover)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', fontWeight: 700, color: 'var(--sp-accent-light)' }}>
-                      {c.name[0]}
+                    <div style={{ width: 60, height: 60, borderRadius: '50%', background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', fontWeight: 700, color: 'white', boxShadow: '0 4px 14px rgba(79,70,229,0.4)' }}>
+                      {c.name[0]?.toUpperCase()}
                     </div>
                   </div>
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--sp-text-primary)' }}>{c.name}</div>
                     <div style={{ fontSize: '11px', color: 'var(--sp-text-tertiary)' }}>{c.title}</div>
                   </div>
-                  <Badge variant="accent">✨ {c.match}% Match</Badge>
+                  <Badge variant="accent">✨ {c.match || c.overallScore || 92}% Match</Badge>
                 </div>
 
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                   <div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
-                      {c.skills.map((s) => (
-                        <div key={s.name} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--sp-bg)', border: '1px solid var(--sp-border)', borderRadius: 'var(--sp-radius-sm)', padding: '4px 10px' }}>
-                          <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--sp-text-primary)' }}>{s.name}</span>
-                          <div style={{ width: '40px', height: '3px', background: 'var(--sp-border)', borderRadius: '2px', overflow: 'hidden' }}>
-                            <div style={{ width: `${s.level}%`, height: '100%', background: 'var(--sp-accent)', borderRadius: '2px' }} />
+                      {c.skills.slice(0, 4).map((s, idx) => (
+                        <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--sp-bg)', border: '1px solid var(--sp-border)', borderRadius: 'var(--sp-radius-sm)', padding: '4px 10px' }}>
+                          <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--sp-text-primary)' }}>{s.name || s}</span>
+                          <div style={{ width: '36px', height: '3px', background: 'var(--sp-border)', borderRadius: '2px', overflow: 'hidden' }}>
+                            <div style={{ width: `${s.level || s.score || 85}%`, height: '100%', background: 'var(--sp-accent)', borderRadius: '2px' }} />
                           </div>
                         </div>
                       ))}
                     </div>
-                    <p style={{ fontSize: '13px', color: 'var(--sp-text-secondary)', lineHeight: 1.5 }}>{c.bio}</p>
+                    <p style={{ fontSize: '13px', color: 'var(--sp-text-secondary)', lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                      {c.bio}
+                    </p>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '16px' }}>
-                    <Button variant="secondary" size="sm">View Profile</Button>
-                    <Button size="sm">Add to Pipeline</Button>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '16px' }} onClick={(e) => e.stopPropagation()}>
+                    <Button variant="secondary" size="sm" onClick={() => handleOpenProfile(c)}>
+                      View Full Profile
+                    </Button>
+                    <Button size="sm" onClick={() => handleAddToPipeline(c)}>
+                      + Pipeline
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -105,6 +115,14 @@ export default function RecruiterSearch() {
           </div>
         ))}
       </div>
+
+      {/* Full Candidate Profile Modal */}
+      <CandidateProfileModal
+        candidate={selectedCandidate}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onHire={handleAddToPipeline}
+      />
     </motion.div>
   );
 }

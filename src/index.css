@@ -143,6 +143,23 @@ body {
   will-change: transform;
 }
 
+/* ⚡ Skeleton Shimmer Structure Loaders for Slow Network Conditions */
+@keyframes skeletonShimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-box {
+  background: linear-gradient(90deg, #18181B 25%, #2A2A2E 50%, #18181B 75%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.6s infinite ease-in-out;
+  border-radius: 6px;
+}
+
 #root {
   min-height: 100vh;
 }
