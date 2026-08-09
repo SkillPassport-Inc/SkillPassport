@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../store/useAppStore.js';
 import StatCard from '../components/StatCard.jsx';
 import Card from '../components/Card.jsx';
-import SyncGitHubModal from '../components/SyncGitHubModal.jsx';
+import SyncPlatformModal from '../components/SyncPlatformModal.jsx';
 import AddSkillModal from '../components/AddSkillModal.jsx';
 import Button from '../components/Button.jsx';
 
@@ -262,7 +262,7 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      <SyncGitHubModal isOpen={isSyncModalOpen} onClose={() => setIsSyncModalOpen(false)} />
+      <SyncPlatformModal isOpen={isSyncModalOpen} onClose={() => setIsSyncModalOpen(false)} />
       <AddSkillModal isOpen={isAddSkillOpen} onClose={() => setIsAddSkillOpen(false)} />
     </motion.div>
   );

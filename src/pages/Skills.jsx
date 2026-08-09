@@ -6,7 +6,7 @@ import Card from '../components/Card.jsx';
 import Badge from '../components/Badge.jsx';
 import Button from '../components/Button.jsx';
 import AddSkillModal from '../components/AddSkillModal.jsx';
-import SyncGitHubModal from '../components/SyncGitHubModal.jsx';
+import SyncPlatformModal from '../components/SyncPlatformModal.jsx';
 
 export default function Skills() {
   const user = useAppStore((state) => state.user);
@@ -143,10 +143,28 @@ export default function Skills() {
             {certifications.map((c) => (
               <Card key={c.id} padding="20px">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <div style={{ fontSize: '16px', fontWeight: 600, color: 'var(--sp-text-primary)' }}>🏆 {c.name}</div>
-                    <div style={{ fontSize: '13px', color: 'var(--sp-text-secondary)', marginTop: '2px' }}>{c.issuer}</div>
-                    <div style={{ fontSize: '11px', color: 'var(--sp-text-tertiary)', marginTop: '4px' }}>ID: {c.credentialId}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                    {c.certificateImageUrl ? (
+                      <img
+                        src={c.certificateImageUrl}
+                        alt={`${c.name} WebP Certificate`}
+                        style={{ width: 56, height: 42, objectFit: 'cover', borderRadius: 'var(--sp-radius-md)', border: '1px solid var(--sp-border)' }}
+                      />
+                    ) : (
+                      <div style={{ width: 44, height: 44, borderRadius: 'var(--sp-radius-md)', background: 'var(--sp-surface-container-high)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>
+                        🏆
+                      </div>
+                    )}
+                    <div>
+                      <div style={{ fontSize: '16px', fontWeight: 600, color: 'var(--sp-text-primary)' }}>{c.name}</div>
+                      <div style={{ fontSize: '13px', color: 'var(--sp-text-secondary)', marginTop: '2px' }}>{c.issuer}</div>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '6px' }}>
+                        <span style={{ fontSize: '11px', color: 'var(--sp-text-tertiary)' }}>ID: {c.credentialId}</span>
+                        <span style={{ fontSize: '10px', background: 'var(--sp-success-muted)', color: 'var(--sp-success)', padding: '1px 6px', borderRadius: 'var(--sp-radius-full)', fontWeight: 600 }}>
+                          {c.fileSizeKB || 45} KB .webp
+                        </span>
+                      </div>
+                    </div>
                   </div>
                   <button onClick={() => removeCertification(c.id)} style={{ background: 'none', border: 'none', color: 'var(--sp-text-tertiary)', cursor: 'pointer', fontSize: '12px' }}>
                     Remove
@@ -159,7 +177,7 @@ export default function Skills() {
       </div>
 
       <AddSkillModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} />
-      <SyncGitHubModal isOpen={isSyncModalOpen} onClose={() => setIsSyncModalOpen(false)} />
+      <SyncPlatformModal isOpen={isSyncModalOpen} onClose={() => setIsSyncModalOpen(false)} />
     </motion.div>
   );
 }

@@ -114,5 +114,23 @@ def career_roadmap(req: CareerRoadmapRequest):
         ]
     }
 
+class PaymentOrderRequest(BaseModel):
+    plan_name: str
+    amount_inr: int
+    user_email: Optional[str] = "developer@example.com"
+
+@app.post("/api/payment/create-order")
+def create_payment_order(req: PaymentOrderRequest):
+    amount_in_paise = req.amount_inr * 100
+    order_id = f"order_rzp_{req.plan_name.lower().replace(' ', '_')}_{hash(req.user_email) % 1000000}"
+    return {
+        "status": "success",
+        "order_id": order_id,
+        "amount": amount_in_paise,
+        "currency": "INR",
+        "key_id": "rzp_test_SkillPassportKey123",
+        "plan_name": req.plan_name
+    }
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

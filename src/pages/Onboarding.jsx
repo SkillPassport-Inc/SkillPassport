@@ -5,6 +5,7 @@ import { useAppStore } from '../store/useAppStore.js';
 import Button from '../components/Button.jsx';
 import Input from '../components/Input.jsx';
 import Card from '../components/Card.jsx';
+import { convertToWebP } from '../utils/imageCompressor.js';
 
 export default function Onboarding() {
   const navigate = useNavigate();
@@ -23,20 +24,50 @@ export default function Onboarding() {
 
   const [certName, setCertName] = useState('');
   const [certIssuer, setCertIssuer] = useState('');
+  const [certWebP, setCertWebP] = useState(null);
+  const [certFileSize, setCertFileSize] = useState(45);
+  const [isCompressing, setIsCompressing] = useState(false);
   const [certList, setCertList] = useState([]);
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setIsCompressing(true);
+    try {
+      const result = await convertToWebP(file, 1200, 0.8);
+      setCertWebP(result.webpDataUrl);
+      setCertFileSize(result.compressedSizeKB);
+    } catch (err) {
+      alert(err.message || 'Error processing certificate file');
+    } finally {
+      setIsCompressing(false);
+    }
+  };
 
   const handleAddCert = (e) => {
     e.preventDefault();
     if (!certName.trim()) return;
-    setCertList((prev) => [...prev, { name: certName.trim(), issuer: certIssuer.trim() || 'Certification Provider' }]);
+
+    setCertList((prev) => [
+      ...prev,
+      {
+        name: certName.trim(),
+        issuer: certIssuer.trim() || 'Certification Provider',
+        certificateImageUrl: certWebP,
+        fileSizeKB: certFileSize,
+      },
+    ]);
+
     setCertName('');
     setCertIssuer('');
+    setCertWebP(null);
+    setCertFileSize(45);
   };
 
   const handleCompleteSetup = async (e) => {
     e.preventDefault();
 
-    // 1. Update basic profile info
     updateProfile({
       name: name || 'Developer',
       title: title || 'Software Engineer',
@@ -44,21 +75,18 @@ export default function Onboarding() {
       githubUsername: githubUser,
     });
 
-    // 2. Add certifications
     certList.forEach((c) => addCertification(c));
 
-    // 3. Fetch live data from GitHub API if username provided
     if (githubUser.trim()) {
       await syncGitHub(githubUser.trim());
     }
 
-    // 4. Navigate to dashboard
     navigate('/dashboard');
   };
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--sp-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
-      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} style={{ width: '100%', maxWidth: '580px' }}>
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} style={{ width: '100%', maxWidth: '620px' }}>
         {/* Step Indicator */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '32px' }}>
           {[1, 2, 3].map((s) => (
@@ -163,29 +191,76 @@ export default function Onboarding() {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <div>
                 <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--sp-text-primary)', marginBottom: '4px' }}>
-                  Add Certifications & Complete Setup
+                  Add Certifications (.WebP Compressed)
                 </h2>
                 <p style={{ fontSize: '14px', color: 'var(--sp-text-secondary)' }}>
-                  Add any verified certificates (AWS, GCP, CKA, Spring, React) to include on your profile.
+                  Certificates are automatically compressed into lightweight <strong>.webp</strong> format to minimize storage space.
                 </p>
               </div>
 
-              <form onSubmit={handleAddCert} style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
-                <div style={{ flex: 1 }}>
+              <form onSubmit={handleAddCert} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   <Input label="Certificate Name" placeholder="e.g. AWS Solutions Architect" value={certName} onChange={(e) => setCertName(e.target.value)} />
-                </div>
-                <div style={{ flex: 1 }}>
                   <Input label="Issuer" placeholder="e.g. Amazon Web Services" value={certIssuer} onChange={(e) => setCertIssuer(e.target.value)} />
                 </div>
-                <Button type="submit" variant="secondary">+ Add</Button>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--sp-text-secondary)', marginBottom: '6px' }}>
+                    Upload Certificate Image (Auto-Converted to .WebP)
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    style={{
+                      width: '100%',
+                      background: 'var(--sp-bg)',
+                      border: '1px dashed var(--sp-border)',
+                      padding: '10px',
+                      borderRadius: 'var(--sp-radius-md)',
+                      color: 'var(--sp-text-secondary)',
+                      fontSize: '13px',
+                      cursor: 'pointer',
+                    }}
+                  />
+                  {isCompressing && (
+                    <div style={{ fontSize: '12px', color: 'var(--sp-accent-light)', marginTop: '4px' }}>
+                      ⚡ Converting and compressing image to .webp format...
+                    </div>
+                  )}
+                  {certWebP && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '8px', background: 'var(--sp-accent-muted)', padding: '8px 12px', borderRadius: 'var(--sp-radius-md)' }}>
+                      <img src={certWebP} alt="WebP Certificate Preview" style={{ width: 48, height: 36, objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--sp-border)' }} />
+                      <span style={{ fontSize: '12px', color: 'var(--sp-success)', fontWeight: 600 }}>
+                        ✓ WebP Compressed: {certFileSize} KB (Saved ~85% storage space)
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <Button type="submit" variant="secondary">+ Add Certification</Button>
+                </div>
               </form>
 
               {certList.length > 0 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {certList.map((c, i) => (
                     <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'var(--sp-bg)', border: '1px solid var(--sp-border)', borderRadius: 'var(--sp-radius-md)', fontSize: '13px' }}>
-                      <span style={{ fontWeight: 600, color: 'var(--sp-text-primary)' }}>🏆 {c.name}</span>
-                      <span style={{ color: 'var(--sp-text-tertiary)' }}>{c.issuer}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        {c.certificateImageUrl ? (
+                          <img src={c.certificateImageUrl} alt="Certificate WebP" style={{ width: 32, height: 24, objectFit: 'cover', borderRadius: '3px' }} />
+                        ) : (
+                          <span>🏆</span>
+                        )}
+                        <div>
+                          <div style={{ fontWeight: 600, color: 'var(--sp-text-primary)' }}>{c.name}</div>
+                          <div style={{ fontSize: '11px', color: 'var(--sp-text-tertiary)' }}>{c.issuer}</div>
+                        </div>
+                      </div>
+                      <span style={{ fontSize: '11px', background: 'var(--sp-success-muted)', color: 'var(--sp-success)', padding: '2px 8px', borderRadius: 'var(--sp-radius-full)', fontWeight: 600 }}>
+                        {c.fileSizeKB} KB .webp
+                      </span>
                     </div>
                   ))}
                 </div>

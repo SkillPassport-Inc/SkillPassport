@@ -47,6 +47,9 @@ venv.bak/
 *.env
 *.local
 
+# Do NOT ignore environment template
+!.env.example
+
 # ==========================================
 # Logs & System Files
 # ==========================================

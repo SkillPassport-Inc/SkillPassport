@@ -50,16 +50,16 @@ const pricingTiers = [
     price: '₹0',
     period: 'forever',
     desc: 'Get started with a verified profile.',
-    features: ['Verified profile', 'Connect GitHub', 'Basic analytics', 'Public portfolio', '3 repo analyses/month'],
+    features: ['Verified profile', 'GitHub connection', 'Basic analytics', 'Public portfolio'],
     cta: 'Get Started',
     highlight: false,
   },
   {
-    name: 'Pro',
+    name: 'Developer Pro',
     price: '₹1,299',
     period: '/month',
     desc: 'Unlock the full power of AI.',
-    features: ['Everything in Free', 'AI Resume Builder', 'Career Coach', 'Advanced analytics', 'ATS optimization', 'Interview simulator', 'Unlimited repo analyses', 'Priority support'],
+    features: ['AI Resume Builder', 'AI Career Coach', 'ATS optimization', 'Unlimited repo analysis'],
     cta: 'Start Free Trial',
     highlight: true,
   },
@@ -68,7 +68,16 @@ const pricingTiers = [
     price: '₹3,999',
     period: '/month',
     desc: 'Find and verify top talent.',
-    features: ['AI candidate search', 'Skill verification reports', 'Talent pipeline', 'Saved searches', 'Team management', 'Candidate comparison', 'API access'],
+    features: ['AI candidate search', 'Talent pipeline', 'Verified skill reports', 'Candidate comparison'],
+    cta: 'Contact Sales',
+    highlight: false,
+  },
+  {
+    name: 'Enterprise',
+    price: 'Custom',
+    period: '',
+    desc: 'Internal skill mapping at scale.',
+    features: ['Internal workforce skill mapping', 'Team dashboards', 'SSO / SAML'],
     cta: 'Contact Sales',
     highlight: false,
   },
@@ -414,7 +423,7 @@ export default function Landing() {
           </p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', maxWidth: '960px', margin: '0 auto' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', maxWidth: '1200px', margin: '0 auto' }}>
           {pricingTiers.map((tier) => (
             <div
               key={tier.name}

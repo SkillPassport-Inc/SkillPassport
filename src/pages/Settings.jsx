@@ -4,7 +4,7 @@ import { useAppStore } from '../store/useAppStore.js';
 import Card from '../components/Card.jsx';
 import Button from '../components/Button.jsx';
 import Input from '../components/Input.jsx';
-import SyncGitHubModal from '../components/SyncGitHubModal.jsx';
+import SyncPlatformModal from '../components/SyncPlatformModal.jsx';
 
 export default function Settings() {
   const user = useAppStore((state) => state.user);
@@ -90,16 +90,16 @@ export default function Settings() {
             onClick={() => setIsSyncModalOpen(true)}
             style={{ background: 'none', border: 'none', color: 'var(--sp-accent-light)', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
           >
-            Sync GitHub Data
+            Sync Multiple Platforms ✨
           </button>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {[
             { key: 'github', name: 'GitHub', desc: 'Real repositories, commits, languages, and PR analytics' },
+            { key: 'leetcode', name: 'LeetCode', desc: 'Algorithmic problem solving scores & ranking' },
             { key: 'gitlab', name: 'GitLab', desc: 'Enterprise repositories & CI/CD pipeline code' },
             { key: 'stackoverflow', name: 'StackOverflow', desc: 'Verified technical answers and reputation' },
-            { key: 'leetcode', name: 'LeetCode', desc: 'Algorithmic problem solving scores' },
           ].map((app) => {
             const isConnected = connectedApps[app.key];
             return (
@@ -118,15 +118,9 @@ export default function Settings() {
                 <Button
                   variant={isConnected ? 'ghost' : 'secondary'}
                   size="sm"
-                  onClick={() => {
-                    if (app.key === 'github' && !isConnected) {
-                      setIsSyncModalOpen(true);
-                    } else {
-                      toggleConnectedApp(app.key);
-                    }
-                  }}
+                  onClick={() => setIsSyncModalOpen(true)}
                 >
-                  {isConnected ? 'Disconnect' : 'Connect'}
+                  {isConnected ? 'Sync Handle' : 'Connect Account'}
                 </Button>
               </div>
             );
@@ -138,14 +132,25 @@ export default function Settings() {
         <h3 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--sp-text-primary)', marginBottom: '20px' }}>Subscription & Billing</h3>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', background: 'var(--sp-accent-muted)', border: '1px solid rgba(79,70,229,0.3)', borderRadius: 'var(--sp-radius-md)' }}>
           <div>
-            <span style={{ fontSize: '16px', fontWeight: 600, color: 'var(--sp-text-primary)' }}>Developer Pro Plan</span>
-            <span style={{ fontSize: '13px', color: 'var(--sp-text-secondary)', marginLeft: '12px' }}>₹1,299/month • Active</span>
+            <span style={{ fontSize: '16px', fontWeight: 600, color: 'var(--sp-text-primary)' }}>
+              {user.subscription?.plan || 'Free'} Plan
+            </span>
+            <span style={{ fontSize: '13px', color: 'var(--sp-text-secondary)', marginLeft: '12px' }}>
+              {user.subscription?.plan === 'Developer Pro' ? '₹1,299/month' : user.subscription?.plan === 'Recruiter' ? '₹3,999/month' : '₹0 / forever'} • Active (Razorpay Verified)
+            </span>
+            {user.subscription?.paymentId && (
+              <div style={{ fontSize: '11px', color: 'var(--sp-text-tertiary)', marginTop: '4px' }}>
+                Payment ID: {user.subscription.paymentId}
+              </div>
+            )}
           </div>
-          <Button variant="secondary" size="sm">Manage Plan</Button>
+          <Button variant="secondary" size="sm" onClick={() => window.location.href = '/pricing'}>
+            Upgrade via Razorpay 💳
+          </Button>
         </div>
       </Card>
 
-      <SyncGitHubModal isOpen={isSyncModalOpen} onClose={() => setIsSyncModalOpen(false)} />
+      <SyncPlatformModal isOpen={isSyncModalOpen} onClose={() => setIsSyncModalOpen(false)} />
     </motion.div>
   );
 }
