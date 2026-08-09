@@ -36,6 +36,17 @@ export default function Dashboard() {
 
   const topSkills = skills.slice(0, 5);
 
+  // Real Date-Based Activity Matrix (Last 49 Calendar Days)
+  const todayDate = new Date();
+  const activityMatrixDays = Array.from({ length: 49 }).map((_, idx) => {
+    const d = new Date(todayDate);
+    d.setDate(d.getDate() - (48 - idx));
+    const dateStr = d.toISOString().split('T')[0]; // 'YYYY-MM-DD'
+    const formattedDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const count = user.activityLog?.[dateStr] || 0;
+    return { dateStr, formattedDate, count };
+  });
+
   const maxScore = 100;
   const chartWidth = 100;
   const chartHeight = 100;
@@ -194,17 +205,58 @@ export default function Dashboard() {
         </Card>
 
         <Card padding="24px" hover={false}>
-          <h3 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--sp-text-primary)', marginBottom: '24px' }}>Activity Matrix</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '3px', flex: 1 }}>
-            {Array.from({ length: 49 }).map((_, i) => {
-              const intensity = (i * 17) % 100 / 100;
-              let bg = 'var(--sp-border)';
-              if (intensity > 0.8) bg = 'var(--sp-accent)';
-              else if (intensity > 0.6) bg = 'rgba(79, 70, 229, 0.6)';
-              else if (intensity > 0.4) bg = 'rgba(79, 70, 229, 0.35)';
-              else if (intensity > 0.2) bg = 'rgba(79, 70, 229, 0.15)';
-              return <div key={i} style={{ aspectRatio: '1', borderRadius: '2px', background: bg, cursor: 'crosshair' }} />;
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--sp-text-primary)' }}>Activity Matrix</h3>
+            <span style={{ fontSize: '12px', color: 'var(--sp-text-tertiary)' }}>Last 49 Days</span>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', flex: 1, marginBottom: '16px' }}>
+            {activityMatrixDays.map((day) => {
+              let bg = 'rgba(255, 255, 255, 0.05)';
+              let border = '1px solid rgba(255, 255, 255, 0.08)';
+
+              if (day.count >= 4) {
+                bg = '#818CF8';
+                border = '1px solid #C084FC';
+              } else if (day.count === 3) {
+                bg = '#4F46E5';
+                border = '1px solid #6366F1';
+              } else if (day.count === 2) {
+                bg = 'rgba(79, 70, 229, 0.65)';
+                border = '1px solid rgba(129, 140, 248, 0.4)';
+              } else if (day.count === 1) {
+                bg = 'rgba(79, 70, 229, 0.3)';
+                border = '1px solid rgba(79, 70, 229, 0.3)';
+              }
+
+              return (
+                <div
+                  key={day.dateStr}
+                  title={`${day.formattedDate}: ${day.count} ${day.count === 1 ? 'activity' : 'activities'} logged`}
+                  style={{
+                    aspectRatio: '1',
+                    borderRadius: '4px',
+                    background: bg,
+                    border: border,
+                    cursor: 'pointer',
+                    transition: 'transform 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.2)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+                />
+              );
             })}
+          </div>
+
+          {/* Activity Intensity Legend */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px', fontSize: '11px', color: 'var(--sp-text-tertiary)' }}>
+            <span>No Login</span>
+            <div style={{ width: 10, height: 10, borderRadius: '2px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.08)' }} />
+            <div style={{ width: 10, height: 10, borderRadius: '2px', background: 'rgba(79, 70, 229, 0.3)' }} />
+            <div style={{ width: 10, height: 10, borderRadius: '2px', background: 'rgba(79, 70, 229, 0.65)' }} />
+            <div style={{ width: 10, height: 10, borderRadius: '2px', background: '#4F46E5' }} />
+            <div style={{ width: 10, height: 10, borderRadius: '2px', background: '#818CF8' }} />
+            <span>Active Login</span>
           </div>
         </Card>
       </div>

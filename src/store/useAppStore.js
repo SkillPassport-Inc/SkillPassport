@@ -48,6 +48,7 @@ const initialUserState = {
     apis: 0,
     prs: 0,
   },
+  activityLog: {},
 };
 
 const initialJobs = [
@@ -272,6 +273,7 @@ export const useAppStore = create(
           });
 
           saveAccountToDB(mergedUser, finalSkills, finalRepos, finalCerts, finalActivities);
+          get().recordTodayActivity(1);
 
           return data;
         } catch (err) {
@@ -283,10 +285,30 @@ export const useAppStore = create(
               certifications: cachedAccount.certifications || [],
               activities: cachedAccount.activities || [],
             });
+            get().recordTodayActivity(1);
             return { user: cachedAccount.user };
           }
           throw err;
         }
+      },
+
+      recordTodayActivity: (amount = 1) => {
+        const todayStr = new Date().toISOString().split('T')[0];
+        set((state) => {
+          const currentLog = state.user.activityLog || {};
+          const updatedLog = {
+            ...currentLog,
+            [todayStr]: (currentLog[todayStr] || 0) + amount,
+          };
+          const updatedUser = {
+            ...state.user,
+            activityLog: updatedLog,
+          };
+
+          saveAccountToDB(updatedUser, state.skills, state.repositories, state.certifications, state.activities);
+
+          return { user: updatedUser };
+        });
       },
 
       login: (email, name = '', role = 'developer', githubUsername = '') => {
