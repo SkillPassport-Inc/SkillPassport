@@ -86,6 +86,42 @@ const initialJobs = [
   },
 ];
 
+// Helper functions for Persistent DB Account Storage (Database Hydration & Persistence)
+const getAccountFromDB = (email) => {
+  if (!email) return null;
+  try {
+    const raw = localStorage.getItem('skillpassport_db_accounts');
+    if (!raw) return null;
+    const accounts = JSON.parse(raw);
+    return accounts[email.toLowerCase().trim()] || null;
+  } catch (e) {
+    return null;
+  }
+};
+
+const saveAccountToDB = (user, skills = [], repositories = [], certifications = [], activities = []) => {
+  if (!user?.email) return;
+  try {
+    const raw = localStorage.getItem('skillpassport_db_accounts') || '{}';
+    const accounts = JSON.parse(raw);
+    const key = user.email.toLowerCase().trim();
+    accounts[key] = {
+      user: {
+        ...user,
+        isAuthenticated: true,
+      },
+      skills: skills || [],
+      repositories: repositories || [],
+      certifications: certifications || [],
+      activities: activities || [],
+      updatedAt: new Date().toISOString(),
+    };
+    localStorage.setItem('skillpassport_db_accounts', JSON.stringify(accounts));
+  } catch (e) {
+    console.error('Error persisting account to DB:', e);
+  }
+};
+
 export const useAppStore = create(
   persist(
     (set, get) => ({
@@ -109,6 +145,20 @@ export const useAppStore = create(
       syncError: null,
 
       signUpWithSupabase: async ({ email, password, name, role }) => {
+        const normalizedEmail = email?.toLowerCase().trim();
+        const existingAccount = getAccountFromDB(normalizedEmail);
+
+        if (existingAccount && existingAccount.user?.isProfileSetup) {
+          set({
+            user: { ...existingAccount.user, isAuthenticated: true },
+            skills: existingAccount.skills || [],
+            repositories: existingAccount.repositories || [],
+            certifications: existingAccount.certifications || [],
+            activities: existingAccount.activities || [],
+          });
+          return { user: existingAccount.user };
+        }
+
         try {
           const { data, error } = await supabase.auth.signUp({
             email,
@@ -125,27 +175,30 @@ export const useAppStore = create(
             throw new Error(error.message || 'Registration failed. Check your inputs.');
           }
 
-          set((state) => ({
-            user: {
-              ...state.user,
-              id: data.user?.id,
-              email: data.user?.email || email,
-              name: name || email.split('@')[0],
-              role: role || 'developer',
-              isAuthenticated: true,
-              isProfileSetup: false,
-            },
-          }));
+          const newUser = {
+            ...get().user,
+            id: data.user?.id,
+            email: data.user?.email || email,
+            name: name || email.split('@')[0],
+            role: role || 'developer',
+            isAuthenticated: true,
+            isProfileSetup: false,
+          };
+
+          set({ user: newUser });
+          saveAccountToDB(newUser, [], [], [], []);
 
           return data;
         } catch (err) {
-          // If offline or dev mode fallback
           get().register({ name, email, role });
           return { user: { email } };
         }
       },
 
       signInWithSupabase: async ({ email, password }) => {
+        const normalizedEmail = email?.toLowerCase().trim();
+        const cachedAccount = getAccountFromDB(normalizedEmail);
+
         try {
           const { data, error } = await supabase.auth.signInWithPassword({
             email,
@@ -153,15 +206,24 @@ export const useAppStore = create(
           });
 
           if (error) {
-            // Check if user has a locally registered account
-            if (get().user.email === email || !import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY.includes('your-supabase-anon-key')) {
-              get().login(email, email.split('@')[0], 'developer');
-              return { user: { email } };
+            if (cachedAccount) {
+              set({
+                user: { ...cachedAccount.user, isAuthenticated: true },
+                skills: cachedAccount.skills || [],
+                repositories: cachedAccount.repositories || [],
+                certifications: cachedAccount.certifications || [],
+                activities: cachedAccount.activities || [],
+              });
+              return { user: cachedAccount.user };
             }
-            throw new Error(error.message || 'Invalid email or password. Credentials do not match recorded database accounts.');
+            throw new Error(error.message || 'Invalid email or password. Credentials do not match database records.');
           }
 
           let userProfile = null;
+          let fetchedSkills = [];
+          let fetchedRepos = [];
+          let fetchedCerts = [];
+
           try {
             const { data: profile } = await supabase
               .from('profiles')
@@ -169,66 +231,121 @@ export const useAppStore = create(
               .eq('id', data.user.id)
               .single();
             userProfile = profile;
+
+            const { data: sk } = await supabase.from('skills').select('*').eq('user_id', data.user.id);
+            if (sk && sk.length > 0) fetchedSkills = sk;
+
+            const { data: rp } = await supabase.from('repositories').select('*').eq('user_id', data.user.id);
+            if (rp && rp.length > 0) fetchedRepos = rp;
+
+            const { data: ct } = await supabase.from('certifications').select('*').eq('user_id', data.user.id);
+            if (ct && ct.length > 0) fetchedCerts = ct;
           } catch (e) {
-            console.log('Profile fetch notice:', e);
+            console.log('Supabase profile hydration:', e);
           }
 
-          set((state) => ({
-            user: {
-              ...state.user,
-              id: data.user.id,
-              email: data.user.email,
-              name: userProfile?.full_name || data.user.user_metadata?.full_name || email.split('@')[0],
-              role: userProfile?.role || 'developer',
-              title: userProfile?.title || 'Software Engineer',
-              bio: userProfile?.bio || '',
-              githubUsername: userProfile?.github_username || '',
-              overallScore: userProfile?.overall_score || 0,
-              isAuthenticated: true,
-              isProfileSetup: !!userProfile?.github_username,
-            },
-          }));
+          const mergedUser = {
+            ...get().user,
+            id: data.user.id,
+            email: data.user.email,
+            name: userProfile?.full_name || cachedAccount?.user?.name || data.user.user_metadata?.full_name || email.split('@')[0],
+            role: userProfile?.role || cachedAccount?.user?.role || 'developer',
+            title: userProfile?.title || cachedAccount?.user?.title || 'Software Engineer',
+            bio: userProfile?.bio || cachedAccount?.user?.bio || '',
+            githubUsername: userProfile?.github_username || cachedAccount?.user?.githubUsername || '',
+            overallScore: userProfile?.overall_score || cachedAccount?.user?.overallScore || 0,
+            isAuthenticated: true,
+            isProfileSetup: cachedAccount?.user?.isProfileSetup ?? (!!userProfile?.github_username || (fetchedSkills.length > 0)),
+          };
+
+          const finalSkills = fetchedSkills.length > 0 ? fetchedSkills : (cachedAccount?.skills || []);
+          const finalRepos = fetchedRepos.length > 0 ? fetchedRepos : (cachedAccount?.repositories || []);
+          const finalCerts = fetchedCerts.length > 0 ? fetchedCerts : (cachedAccount?.certifications || []);
+          const finalActivities = cachedAccount?.activities || [];
+
+          set({
+            user: mergedUser,
+            skills: finalSkills,
+            repositories: finalRepos,
+            certifications: finalCerts,
+            activities: finalActivities,
+          });
+
+          saveAccountToDB(mergedUser, finalSkills, finalRepos, finalCerts, finalActivities);
 
           return data;
         } catch (err) {
-          // Robust fallback so dev user can always log in
-          if (email) {
-            get().login(email, email.split('@')[0], 'developer');
-            return { user: { email } };
+          if (cachedAccount) {
+            set({
+              user: { ...cachedAccount.user, isAuthenticated: true },
+              skills: cachedAccount.skills || [],
+              repositories: cachedAccount.repositories || [],
+              certifications: cachedAccount.certifications || [],
+              activities: cachedAccount.activities || [],
+            });
+            return { user: cachedAccount.user };
           }
           throw err;
         }
       },
 
       login: (email, name = '', role = 'developer', githubUsername = '') => {
-        set((state) => ({
-          user: {
-            ...state.user,
-            email: email || state.user.email,
-            name: name || state.user.name || (email ? email.split('@')[0] : 'User'),
-            role: role || state.user.role,
-            githubUsername: githubUsername || state.user.githubUsername,
-            platformHandles: {
-              ...state.user.platformHandles,
-              github: githubUsername || state.user.githubUsername || '',
-            },
+        const normalizedEmail = email?.toLowerCase().trim();
+        const cachedAccount = getAccountFromDB(normalizedEmail);
+
+        if (cachedAccount) {
+          set({
+            user: { ...cachedAccount.user, isAuthenticated: true },
+            skills: cachedAccount.skills || [],
+            repositories: cachedAccount.repositories || [],
+            certifications: cachedAccount.certifications || [],
+            activities: cachedAccount.activities || [],
+          });
+        } else {
+          const newUser = {
+            ...get().user,
+            email: email || get().user.email,
+            name: name || get().user.name || (email ? email.split('@')[0] : 'User'),
+            role: role || get().user.role,
+            githubUsername: githubUsername || get().user.githubUsername,
             isAuthenticated: true,
-          },
-        }));
+            isProfileSetup: false,
+          };
+          set({ user: newUser });
+          saveAccountToDB(newUser, get().skills, get().repositories, get().certifications, get().activities);
+        }
       },
 
       register: (data) => {
-        set((state) => ({
-          user: {
-            ...state.user,
+        const normalizedEmail = data.email?.toLowerCase().trim();
+        const cachedAccount = getAccountFromDB(normalizedEmail);
+
+        if (cachedAccount && cachedAccount.user?.isProfileSetup) {
+          set({
+            user: { ...cachedAccount.user, isAuthenticated: true },
+            skills: cachedAccount.skills || [],
+            repositories: cachedAccount.repositories || [],
+            certifications: cachedAccount.certifications || [],
+            activities: cachedAccount.activities || [],
+          });
+        } else {
+          const newUser = {
+            ...get().user,
             ...data,
             isAuthenticated: true,
             isProfileSetup: false,
-          },
-        }));
+          };
+          set({ user: newUser });
+          saveAccountToDB(newUser, get().skills, get().repositories, get().certifications, get().activities);
+        }
       },
 
       logout: () => {
+        const currentUser = get().user;
+        if (currentUser?.email) {
+          saveAccountToDB(currentUser, get().skills, get().repositories, get().certifications, get().activities);
+        }
+
         set(() => ({
           user: initialUserState,
           skills: [],
@@ -252,13 +369,31 @@ export const useAppStore = create(
       },
 
       updateProfile: (data) => {
-        set((state) => ({
-          user: {
+        set((state) => {
+          const updatedUser = {
             ...state.user,
             ...data,
             isProfileSetup: true,
-          },
-        }));
+          };
+          saveAccountToDB(updatedUser, state.skills, state.repositories, state.certifications, state.activities);
+
+          if (updatedUser.id) {
+            supabase.from('profiles').upsert({
+              id: updatedUser.id,
+              email: updatedUser.email,
+              full_name: updatedUser.name,
+              title: updatedUser.title,
+              bio: updatedUser.bio,
+              github_username: updatedUser.githubUsername,
+              role: updatedUser.role,
+              updated_at: new Date().toISOString(),
+            }).then(({ error }) => {
+              if (error) console.log('Supabase profile sync note:', error.message);
+            });
+          }
+
+          return { user: updatedUser };
+        });
       },
 
       addSkill: (newSkillData) => {
@@ -493,23 +628,29 @@ export const useAppStore = create(
               color: 'var(--sp-accent-light)',
             };
 
+            const updatedUser = {
+              ...state.user,
+              githubUsername,
+              platformHandles: { ...state.user.platformHandles, github: githubUsername },
+              isProfileSetup: true,
+              stats: {
+                projects: ghRepos.length,
+                commits: ghRepos.length * 45 + totalStars * 5,
+                apis: Math.round(ghRepos.length * 2.5),
+                prs: Math.round(ghRepos.length * 1.8),
+              },
+            };
+
+            const updatedActivities = [newActivity, ...state.activities.slice(0, 9)];
+
+            saveAccountToDB(updatedUser, mergedSkills, parsedRepos, state.certifications, updatedActivities);
+
             return {
               repositories: parsedRepos,
               skills: mergedSkills,
               connectedApps: { ...state.connectedApps, github: true },
-              user: {
-                ...state.user,
-                githubUsername,
-                platformHandles: { ...state.user.platformHandles, github: githubUsername },
-                isProfileSetup: true,
-                stats: {
-                  projects: ghRepos.length,
-                  commits: ghRepos.length * 45 + totalStars * 5,
-                  apis: Math.round(ghRepos.length * 2.5),
-                  prs: Math.round(ghRepos.length * 1.8),
-                },
-              },
-              activities: [newActivity, ...state.activities.slice(0, 9)],
+              user: updatedUser,
+              activities: updatedActivities,
               isSyncingGitHub: false,
               syncError: null,
             };

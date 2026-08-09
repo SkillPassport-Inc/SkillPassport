@@ -95,7 +95,7 @@ export default function Landing() {
   const navigate = useNavigate();
 
   return (
-    <div style={{ background: 'var(--sp-bg)', minHeight: '100vh' }}>
+    <div style={{ background: 'radial-gradient(circle at 15% 15%, rgba(79,70,229,0.22) 0%, transparent 45%), radial-gradient(circle at 85% 45%, rgba(124,58,237,0.18) 0%, transparent 45%), radial-gradient(circle at 35% 85%, rgba(192,132,252,0.15) 0%, transparent 45%), #09090B', minHeight: '100vh', position: 'relative' }}>
       <header
         style={{
           position: 'fixed',
@@ -162,6 +162,8 @@ export default function Landing() {
 
       <section
         style={{
+          position: 'relative',
+          zIndex: 1,
           paddingTop: '160px',
           paddingBottom: '80px',
           maxWidth: '1280px',
@@ -336,7 +338,7 @@ export default function Landing() {
         </motion.div>
       </section>
 
-      <section style={{ borderTop: '1px solid var(--sp-border)', padding: '48px 0' }}>
+      <section style={{ borderTop: '1px solid var(--sp-border)', borderBottom: '1px solid var(--sp-border)', padding: '48px 0', overflow: 'hidden', position: 'relative', zIndex: 1 }}>
         <p
           style={{
             textAlign: 'center',
@@ -350,22 +352,26 @@ export default function Landing() {
         >
           Trusted by engineering teams at
         </p>
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            gap: '56px',
-            flexWrap: 'wrap',
-            opacity: 0.4,
-            padding: '0 48px',
-          }}
-        >
-          {trustedCompanies.map((c) => (
-            <span key={c} style={{ fontSize: '20px', fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--sp-text-primary)' }}>
-              {c}
-            </span>
-          ))}
+
+        {/* 60FPS Pure CSS Infinite Marquee Moving Left */}
+        <div className="marquee-container">
+          <div className="marquee-track">
+            {[...trustedCompanies, ...trustedCompanies, ...trustedCompanies, ...trustedCompanies, ...trustedCompanies, ...trustedCompanies].map((company, i) => (
+              <span
+                key={i}
+                style={{
+                  fontSize: '22px',
+                  fontWeight: 700,
+                  color: 'var(--sp-text-secondary)',
+                  opacity: 0.6,
+                  whiteSpace: 'nowrap',
+                  letterSpacing: '-0.02em',
+                }}
+              >
+                {company}
+              </span>
+            ))}
+          </div>
         </div>
       </section>
 

@@ -68,15 +68,25 @@ export default function Login() {
           overflow: 'hidden',
         }}
       >
-        {/* Background Glowing Mesh Gradients */}
+        {/* Dynamic Floating Ambient Light Orbs */}
         <motion.div
-          animate={{ scale: [1, 1.2, 1], opacity: [0.4, 0.65, 0.4] }}
-          transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
+          animate={{
+            x: [0, 140, -100, 0],
+            y: [0, 160, -90, 0],
+            scale: [1, 1.25, 0.9, 1],
+            opacity: [0.35, 0.6, 0.35, 0.35],
+          }}
+          transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }}
           style={{ position: 'absolute', top: '-15%', left: '-15%', width: '550px', height: '550px', borderRadius: '50%', background: 'radial-gradient(circle, #4F46E5 0%, transparent 65%)', filter: 'blur(75px)', pointerEvents: 'none' }}
         />
         <motion.div
-          animate={{ scale: [1, 1.3, 1], opacity: [0.2, 0.45, 0.2] }}
-          transition={{ duration: 11, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
+          animate={{
+            x: [0, -120, 110, 0],
+            y: [0, -140, 120, 0],
+            scale: [1, 1.3, 0.95, 1],
+            opacity: [0.2, 0.45, 0.2, 0.2],
+          }}
+          transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
           style={{ position: 'absolute', bottom: '-15%', right: '-15%', width: '500px', height: '500px', borderRadius: '50%', background: 'radial-gradient(circle, #7C3AED 0%, transparent 65%)', filter: 'blur(85px)', pointerEvents: 'none' }}
         />
 
