@@ -33,7 +33,10 @@ export default function Login() {
         password,
       });
 
-      if (!useAppStore.getState().user.isProfileSetup) {
+      const loggedInUser = useAppStore.getState().user;
+      if (loggedInUser.role === 'recruiter') {
+        navigate('/recruiter');
+      } else if (!loggedInUser.isProfileSetup) {
         navigate('/onboarding');
       } else {
         navigate('/dashboard');
@@ -77,11 +80,35 @@ export default function Login() {
           style={{ position: 'absolute', bottom: '-15%', right: '-15%', width: '500px', height: '500px', borderRadius: '50%', background: 'radial-gradient(circle, #7C3AED 0%, transparent 65%)', filter: 'blur(85px)', pointerEvents: 'none' }}
         />
 
-        {/* Top Header Logo */}
+        {/* Top Header Logo & Back Arrow */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }} onClick={() => navigate('/')}>
-            <div style={{ width: 38, height: 38, borderRadius: '10px', background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '16px', color: 'white', boxShadow: '0 4px 14px rgba(79, 70, 229, 0.4)' }}>SP</div>
-            <span style={{ fontSize: '20px', fontWeight: 700, color: 'white', letterSpacing: '-0.02em' }}>SkillPassport</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <button
+              onClick={() => navigate('/')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '100px',
+                padding: '6px 14px',
+                color: '#FAFAFA',
+                fontSize: '13px',
+                fontWeight: 500,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                fontFamily: 'var(--sp-font)',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)')}
+            >
+              ← Back
+            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }} onClick={() => navigate('/')}>
+              <div style={{ width: 38, height: 38, borderRadius: '10px', background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '16px', color: 'white', boxShadow: '0 4px 14px rgba(79, 70, 229, 0.4)' }}>SP</div>
+              <span style={{ fontSize: '20px', fontWeight: 700, color: 'white', letterSpacing: '-0.02em' }}>SkillPassport</span>
+            </div>
           </div>
           <span style={{ fontSize: '12px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#A1A1AA', padding: '4px 12px', borderRadius: '100px', fontWeight: 500 }}>
             v2.4 Enterprise Edition

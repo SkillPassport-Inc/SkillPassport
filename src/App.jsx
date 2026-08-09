@@ -20,6 +20,8 @@ import Jobs from './pages/Jobs.jsx';
 import Pricing from './pages/Pricing.jsx';
 import Settings from './pages/Settings.jsx';
 import CommandPalette from './components/CommandPalette.jsx';
+import ProtectedRoute from './components/ProtectedRoute.jsx';
+import PublicOnlyRoute from './components/PublicOnlyRoute.jsx';
 import './index.css';
 
 const queryClient = new QueryClient({
@@ -38,31 +40,39 @@ function App() {
         <CommandPalette />
         <AnimatePresence mode="wait">
           <Routes>
-            {/* Public Routes */}
+            {/* 🌐 Public Shareable Routes */}
             <Route path="/" element={<Landing />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/onboarding" element={<Onboarding />} />
-            <Route path="/pricing" element={<Pricing />} />
             <Route path="/u/:username" element={<PublicProfile />} />
 
-            {/* Developer Dashboard Routes */}
-            <Route element={<DashboardLayout />}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/skills" element={<Skills />} />
-              <Route path="/skills/graph" element={<SkillGraph />} />
-              <Route path="/repositories" element={<Repositories />} />
-              <Route path="/resume" element={<ResumeBuilder />} />
-              <Route path="/analytics" element={<Analytics />} />
-              <Route path="/career" element={<CareerCoach />} />
-              <Route path="/jobs" element={<Jobs />} />
-              <Route path="/settings" element={<Settings />} />
+            {/* 🔑 Guest Only Auth Routes */}
+            <Route element={<PublicOnlyRoute />}>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
             </Route>
 
-            {/* Recruiter Routes */}
-            <Route element={<DashboardLayout variant="recruiter" />}>
-              <Route path="/recruiter" element={<RecruiterDashboard />} />
-              <Route path="/recruiter/search" element={<RecruiterSearch />} />
+            {/* 💻 Protected Developer Only Routes */}
+            <Route element={<ProtectedRoute allowedRoles={['developer']} />}>
+              <Route path="/onboarding" element={<Onboarding />} />
+              <Route path="/pricing" element={<Pricing />} />
+              <Route element={<DashboardLayout />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/skills" element={<Skills />} />
+                <Route path="/skills/graph" element={<SkillGraph />} />
+                <Route path="/repositories" element={<Repositories />} />
+                <Route path="/resume" element={<ResumeBuilder />} />
+                <Route path="/analytics" element={<Analytics />} />
+                <Route path="/career" element={<CareerCoach />} />
+                <Route path="/jobs" element={<Jobs />} />
+                <Route path="/settings" element={<Settings />} />
+              </Route>
+            </Route>
+
+            {/* 👔 Protected Recruiter Only Routes */}
+            <Route element={<ProtectedRoute allowedRoles={['recruiter']} />}>
+              <Route element={<DashboardLayout variant="recruiter" />}>
+                <Route path="/recruiter" element={<RecruiterDashboard />} />
+                <Route path="/recruiter/search" element={<RecruiterSearch />} />
+              </Route>
             </Route>
           </Routes>
         </AnimatePresence>
