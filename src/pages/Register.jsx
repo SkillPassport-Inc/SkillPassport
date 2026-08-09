@@ -7,29 +7,45 @@ import Input from '../components/Input.jsx';
 
 export default function Register() {
   const navigate = useNavigate();
-  const registerUser = useAppStore((state) => state.register);
+  const signUpWithSupabase = useAppStore((state) => state.signUpWithSupabase);
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [role, setRole] = useState('developer');
+  const [errorMsg, setErrorMsg] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    setErrorMsg('');
+
+    if (!password || password.length < 6) {
+      setErrorMsg('Password must be at least 6 characters long.');
+      return;
+    }
+
+    setLoading(true);
     const fullName = `${firstName} ${lastName}`.trim() || 'Developer';
-    const userEmail = email || 'user@example.com';
 
-    registerUser({
-      name: fullName,
-      email: userEmail,
-      role,
-      title: role === 'developer' ? 'Software Engineer' : 'Technical Recruiter',
-    });
+    try {
+      await signUpWithSupabase({
+        email,
+        password,
+        name: fullName,
+        role,
+      });
 
-    if (role === 'recruiter') {
-      navigate('/recruiter');
-    } else {
-      navigate('/onboarding');
+      if (role === 'recruiter') {
+        navigate('/recruiter');
+      } else {
+        navigate('/onboarding');
+      }
+    } catch (err) {
+      setErrorMsg(err.message || 'Registration failed. Credentials could not be created.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -37,8 +53,14 @@ export default function Register() {
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--sp-bg)', padding: '24px' }}>
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} style={{ width: '100%', maxWidth: '440px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <div onClick={() => navigate('/')} style={{ width: 48, height: 48, borderRadius: 'var(--sp-radius-lg)', background: 'var(--sp-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '18px', color: 'white', marginBottom: '24px', cursor: 'pointer' }}>SP</div>
-        <h1 style={{ fontSize: '28px', fontWeight: 700, color: 'var(--sp-text-primary)', marginBottom: '8px', letterSpacing: '-0.02em' }}>Create your verified identity</h1>
-        <p style={{ fontSize: '14px', color: 'var(--sp-text-secondary)', marginBottom: '32px' }}>Start proving your technical expertise with real evidence</p>
+        <h1 style={{ fontSize: '28px', fontWeight: 700, color: 'var(--sp-text-primary)', marginBottom: '8px', letterSpacing: '-0.02em' }}>Create your account</h1>
+        <p style={{ fontSize: '14px', color: 'var(--sp-text-secondary)', marginBottom: '32px' }}>Sign up with email and password to persist your verified identity</p>
+
+        {errorMsg && (
+          <div style={{ width: '100%', background: 'var(--sp-error-muted)', color: 'var(--sp-error)', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '12px 16px', borderRadius: 'var(--sp-radius-md)', fontSize: '13px', marginBottom: '16px' }}>
+            ⚠️ {errorMsg}
+          </div>
+        )}
 
         <form onSubmit={handleRegister} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '24px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -47,6 +69,7 @@ export default function Register() {
           </div>
 
           <Input label="Email Address" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <Input label="Password" type="password" placeholder="•••••••• (Min 6 characters)" value={password} onChange={(e) => setPassword(e.target.value)} required />
 
           <div>
             <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--sp-text-secondary)', marginBottom: '6px' }}>I am joining as a</label>
@@ -76,8 +99,8 @@ export default function Register() {
             </div>
           </div>
 
-          <Button type="submit" style={{ width: '100%', marginTop: '8px' }} size="lg">
-            Create Account & Continue →
+          <Button type="submit" loading={loading} style={{ width: '100%', marginTop: '8px' }} size="lg">
+            Create Account & Save Credentials →
           </Button>
         </form>
 

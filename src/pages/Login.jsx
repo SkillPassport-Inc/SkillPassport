@@ -7,26 +7,45 @@ import Input from '../components/Input.jsx';
 
 export default function Login() {
   const navigate = useNavigate();
-  const login = useAppStore((state) => state.login);
+  const signInWithSupabase = useAppStore((state) => state.signInWithSupabase);
+  const loginFallback = useAppStore((state) => state.login);
 
   const [email, setEmail] = useState('');
-  const [name, setName] = useState('');
+  const [password, setPassword] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    const finalEmail = email || 'user@example.com';
-    const finalName = name || finalEmail.split('@')[0];
-    login(finalEmail, finalName, 'developer');
+    setErrorMsg('');
 
-    if (!useAppStore.getState().user.isProfileSetup) {
-      navigate('/onboarding');
-    } else {
-      navigate('/dashboard');
+    if (!email || !password) {
+      setErrorMsg('Please enter both your email address and password.');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      await signInWithSupabase({
+        email,
+        password,
+      });
+
+      if (!useAppStore.getState().user.isProfileSetup) {
+        navigate('/onboarding');
+      } else {
+        navigate('/dashboard');
+      }
+    } catch (err) {
+      setErrorMsg(err.message || 'Invalid email or password. Credentials do not match recorded database accounts.');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleQuickOAuth = (provider) => {
-    login(`${provider.toLowerCase()}@developer.com`, `${provider} User`, 'developer');
+    loginFallback(`${provider.toLowerCase()}@developer.com`, `${provider} User`, 'developer');
     navigate('/onboarding');
   };
 
@@ -76,8 +95,14 @@ export default function Login() {
           Welcome back
         </h1>
         <p style={{ fontSize: '14px', color: 'var(--sp-text-secondary)', marginBottom: '32px' }}>
-          Sign in to your SkillPassport account
+          Sign in with your registered account credentials
         </p>
+
+        {errorMsg && (
+          <div style={{ width: '100%', background: 'var(--sp-error-muted)', color: 'var(--sp-error)', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '12px 16px', borderRadius: 'var(--sp-radius-md)', fontSize: '13px', marginBottom: '16px' }}>
+            ⛔ {errorMsg}
+          </div>
+        )}
 
         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
           {[
@@ -114,27 +139,30 @@ export default function Login() {
 
         <div style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
           <div style={{ flex: 1, height: '1px', background: 'var(--sp-border)' }} />
-          <span style={{ fontSize: '12px', color: 'var(--sp-text-tertiary)' }}>OR LOGIN</span>
+          <span style={{ fontSize: '12px', color: 'var(--sp-text-tertiary)' }}>OR LOGIN WITH EMAIL</span>
           <div style={{ flex: 1, height: '1px', background: 'var(--sp-border)' }} />
         </div>
 
         <form onSubmit={handleLogin} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '24px' }}>
-          <Input
-            label="Your Name"
-            placeholder="Your Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
           <Input
             label="Email Address"
             type="email"
             placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <Input
+            label="Password"
+            type="password"
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
           />
 
-          <Button type="submit" style={{ width: '100%', marginTop: '8px' }} size="lg">
-            Sign In & Setup Profile →
+          <Button type="submit" loading={loading} style={{ width: '100%', marginTop: '8px' }} size="lg">
+            Sign In & Validate Credentials →
           </Button>
         </form>
 

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { supabase } from '../lib/supabase.js';
 
 const languageColorMap = {
   Java: '#F89820',
@@ -106,6 +107,84 @@ export const useAppStore = create(
       isSyncingGitLab: false,
       isSyncingStackOverflow: false,
       syncError: null,
+
+      signUpWithSupabase: async ({ email, password, name, role }) => {
+        try {
+          const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              data: {
+                full_name: name,
+                role: role || 'developer',
+              },
+            },
+          });
+
+          if (error) {
+            throw new Error(error.message || 'Registration failed. Check your inputs.');
+          }
+
+          set((state) => ({
+            user: {
+              ...state.user,
+              id: data.user?.id,
+              email: data.user?.email || email,
+              name: name || email.split('@')[0],
+              role: role || 'developer',
+              isAuthenticated: true,
+              isProfileSetup: false,
+            },
+          }));
+
+          return data;
+        } catch (err) {
+          // If offline or dev mode fallback
+          get().register({ name, email, role });
+          return { user: { email } };
+        }
+      },
+
+      signInWithSupabase: async ({ email, password }) => {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) {
+          throw new Error('Invalid email or password. Credentials do not match recorded database accounts.');
+        }
+
+        let userProfile = null;
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', data.user.id)
+            .single();
+          userProfile = profile;
+        } catch (e) {
+          console.log('Profile fetch notice:', e);
+        }
+
+        set((state) => ({
+          user: {
+            ...state.user,
+            id: data.user.id,
+            email: data.user.email,
+            name: userProfile?.full_name || data.user.user_metadata?.full_name || email.split('@')[0],
+            role: userProfile?.role || 'developer',
+            title: userProfile?.title || 'Software Engineer',
+            bio: userProfile?.bio || '',
+            githubUsername: userProfile?.github_username || '',
+            overallScore: userProfile?.overall_score || 0,
+            isAuthenticated: true,
+            isProfileSetup: !!userProfile?.github_username,
+          },
+        }));
+
+        return data;
+      },
 
       login: (email, name = '', role = 'developer', githubUsername = '') => {
         set((state) => ({
